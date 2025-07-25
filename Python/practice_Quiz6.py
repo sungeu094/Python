@@ -17,7 +17,7 @@ Quiz) 표준 체중을 구하는 프로그램을 작성하시오
 키 175cm 남자의 표준 체중은 67.38kg 입니다.
 
 '''
-
+#Solution
 from math import *
 def std_weight(height, gender) : 
     height /= 100
