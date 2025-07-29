@@ -10,9 +10,15 @@ class Flyable:
     def __init__(self):
         print("Flyable 생성자")
 
+    def a(self, name):
+        self.name = name
+        print(self.name)
+
 class FlyableUnit(Unit, Flyable):
     def __init__(self):
-        super().__init__()
+        # super().__init__()
+        Unit.__init__(self)
+        Flyable.__init__(self)
 
 
 # 수송만 가능한 유닛
