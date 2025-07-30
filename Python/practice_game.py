@@ -20,6 +20,14 @@ class Unit :
         if self.hp <= 0:
             print("{0} : 파괴되었습니다.".format(self.name))
 
+# 공중 기능을 가진 유닛
+class FlyableUnit:
+    def __init__(self, flying_speed):
+        self.flying_speed = flying_speed
+
+    def fly(self, name, location):
+        print("{0} : {1} 방향으로 날아갑니다. [속도 {2}]".format(name, location, self.flying_speed))
+
 
 # 공격 유닛
 class AttackUnit(Unit):
@@ -29,10 +37,26 @@ class AttackUnit(Unit):
     def attack(self, location):
         print("{0} : {1} 방향으로 적군을 공격 합니다. [공격력 {2}]".format(self.name, location, self.damage))
 
+
+# 공중 공격 유닛 (공중 기능 + 공격 기능)
+class FlyableAttackUnit(AttackUnit, FlyableUnit) :
+    def __init__(self, name, hp, flying_speed, damage):
+        AttackUnit.__init__(self, name, hp, 0, damage)
+        FlyableUnit.__init__(self, flying_speed)
+
+    def move(self, location):
+        print("[공중 유닛 이동]")
+        self.fly(self.name, location)   
+
+
 ## 공격 유닛 - 마린
 class Marine(AttackUnit):
+    count_marine = 0
+
     def __init__(self):
-        super().__init__("마린", 40, 1, 5)
+        Marine.count_marine += 1
+        self.unit_id = Marine.count_marine
+        super().__init__("마린{0}".format(self.unit_id), 40, 1, 5)
 
     # 스팀팩 : 일정 시간 동안 이동 및 공격 속도를 증가, 본인 체력 10 감소
     def stimpack(self):
@@ -54,6 +78,7 @@ class Tank(AttackUnit):
 
     def set_seize_mode(self) :
         if Tank.seize_developed == False:
+            print("{0} : 현재 시즈모드 개발이 되지 않았습니다.".format(self.name))
             return
         
         if self.seize_mode == False:
@@ -64,28 +89,6 @@ class Tank(AttackUnit):
             print("{0} : 시즈모드를 해제합니다.".format(self.name))
             self.damage /= 2
             self.seize_mode = False    
-
-
-
-# 공중 기능을 가진 유닛
-class FlyableUnit:
-    def __init__(self, flying_speed):
-        self.flying_speed = flying_speed
-
-    def fly(self, name, location):
-        print("{0} : {1} 방향으로 날아갑니다. [속도 {2}]".format(name, location, self.flying_speed))
-
-
-# 공중 공격 유닛 (공중 기능 + 공격 기능)
-class FlyableAttackUnit(AttackUnit, FlyableUnit) :
-    def __init__(self, name, hp, flying_speed, damage):
-        AttackUnit.__init__(self, name, hp, 0, damage)
-        FlyableUnit.__init__(self, flying_speed)
-
-    def move(self, location):
-        print("[공중 유닛 이동]")
-        self.fly(self.name, location)   
-
 
 
 ## 공중 공격 유닛 - 레이스
@@ -115,6 +118,7 @@ def game_over():
 # 실제 게임 진행 (현재까지 사용한 문법(Ex. for문)을 사용해서 리팩토링은 내일 천천히 진행해보기.)
 game_start()
 
+'''
 # 마린 3기 생성
 m1 = Marine()
 m2 = Marine()
@@ -137,6 +141,21 @@ attack_units.append(m3)
 attack_units.append(t1)
 attack_units.append(t2)
 attack_units.append(w1)
+'''
+
+unit_plan = [ ("Marine", 3), ("Tank", 2), ("Wraith", 1)]
+
+attack_units = []
+
+for unit_type, count in unit_plan:
+    for _ in range(count):
+        if unit_type == "Marine":
+            attack_units.append(Marine())
+        elif unit_type == "Tank":
+            attack_units.append(Tank())
+        if unit_type == "Wraith":
+            attack_units.append(Wraith())
+
 
 # 전군 이동
 for unit in attack_units:
@@ -145,8 +164,8 @@ for unit in attack_units:
 print()
 
 # 탱크 시즈모드 개발
-Tank.seize_developed = True
-print("[알림] 탱크 시즈 모드 개발이 완료되었습니다.")
+#Tank.seize_developed = True
+#print("[알림] 탱크 시즈 모드 개발이 완료되었습니다.")
 
 
 # 공격 모드 준비 ( 마린 : 스팀팩, 탱크 : 시즈모드, 레이스 : 클로킹)
@@ -157,7 +176,7 @@ for unit in attack_units:
         unit.set_seize_mode()
     elif isinstance(unit, Wraith):
         unit.clocking()
-
+    
 print()
 
 # 전군 공격
