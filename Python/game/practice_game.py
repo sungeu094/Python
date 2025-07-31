@@ -10,13 +10,12 @@ class Unit :
         print("{0} 유닛이 생성 되었습니다.".format(self.name))
         
     def move(self, location):
-        print("[지상 유닛 이동]")
-        print("{0} : {1} 방향으로 이동합니다. [속도 {2}]".format(self.name, location, self.speed))
+        print("{0} 방향으로 이동합니다. [속도 {1}]".format(location, self.speed))
 
     def damaged(self, damage):
-        print("{0} : {1} 데미지를 입었습니다.".format(self.name, damage))
+        print("{0} 데미지를 입었습니다.".format(damage), end=" ")
         self.hp -= damage
-        print("{0} : 현재 체력은 {1}입니다.".format(self.name, self.hp))
+        print("현재 체력 : {0}".format(self.hp))
         if self.hp <= 0:
             print("{0} : 파괴되었습니다.".format(self.name))
 
@@ -26,7 +25,7 @@ class FlyableUnit:
         self.flying_speed = flying_speed
 
     def fly(self, name, location):
-        print("{0} : {1} 방향으로 날아갑니다. [속도 {2}]".format(name, location, self.flying_speed))
+        print("{0} 방향으로 날아갑니다. [속도 {1}]".format(location, self.flying_speed))
 
 
 # 공격 유닛
@@ -35,7 +34,7 @@ class AttackUnit(Unit):
         Unit.__init__(self, name, hp, speed, damage)
 
     def attack(self, location):
-        print("{0} : {1} 방향으로 적군을 공격 합니다. [공격력 {2}]".format(self.name, location, self.damage))
+        print("{0} 방향으로 적군을 공격 합니다. [공격력 {1}]".format(location, self.damage))
 
 
 # 공중 공격 유닛 (공중 기능 + 공격 기능)
@@ -45,7 +44,6 @@ class FlyableAttackUnit(AttackUnit, FlyableUnit) :
         FlyableUnit.__init__(self, flying_speed)
 
     def move(self, location):
-        print("[공중 유닛 이동]")
         self.fly(self.name, location)   
 
 
@@ -69,12 +67,16 @@ class Marine(AttackUnit):
 
 ## 방어 유닛 - 탱크
 class Tank(AttackUnit):
+    count_tank = 0
+
     def __init__(self):
-        super().__init__("탱크", 150, 1, 35)
+        Tank.count_tank += 1
+        self.unit_id = Tank.count_tank      # 해당 객체의 속성으로 사용하기 위해서 self를 붙여서 인스턴스 변수로 사용하는 것이다. 현재는 모든 객체가 개개인의 번호를 가질 것이기 때문에 겹치지 않기 위해 처음에는 클래스 변수로 설정했다가 인스턴스 변수로 옮겨서 개개인의 번호를 사용할 수 있도록 한 것이다.
+        super().__init__("탱크{0}".format(self.unit_id), 150, 1, 35)
         self.seize_mode = False
 
     # 시즈모드 : 더 높은 파워로 공격이 가능하지만 이동이 불가능
-    seize_developed = False     # 시즈모드 개발여부
+    seize_developed = False   # 시즈모드 개발여부
 
     def set_seize_mode(self) :
         if Tank.seize_developed == False:
@@ -93,8 +95,12 @@ class Tank(AttackUnit):
 
 ## 공중 공격 유닛 - 레이스
 class Wraith(FlyableAttackUnit):
+    count_wraith = 0
+
     def __init__(self):
-        super().__init__("레이스", 80, 5, 20)
+        Wraith.count_wraith += 1
+        self.unit_id = Wraith.count_wraith    # 먼저 인스턴스 변수로 설정했는지 확인 후 없다면 클래스 변수로 설정했는지 확인.
+        super().__init__("레이스 {0}".format(self.unit_id), 80, 5, 20)
         self.clocked = False # 클로킹 모드 (해제 상태)
 
     def clocking(self):
@@ -104,6 +110,31 @@ class Wraith(FlyableAttackUnit):
         else:
             print("{0} : 클로킹 모드 설정합니다.".format(self.name))
             self.clocked = True
+
+# unit manager class - 유닛 관리. 현재 있는 Marine, Tank, Wratih 유닛에 관한 정보 관리
+class UnitManager:
+    def __init__(self):
+        self.units = []
+    
+    def makeUnit(self, unit_type):     # 유닛 생성
+        if unit_type == "Marine":
+            unit = Marine() 
+        elif unit_type == "Tank":
+            unit = Tank()
+        elif unit_type == "Wraith":
+            unit = Wraith()
+        else :
+            return None
+        
+        self.units.append(unit)
+
+    def deleteUnit(self, unit):   # 유닛 삭제
+        if unit_hp <= 0:
+            self.units.remove(unit)
+
+    def searchUnit():   # 유닛 상태검색(이름, 생존 여부, 위치, 피상태 ...)
+        pass
+
 
 
 
@@ -115,50 +146,24 @@ def game_over():
     print("[Player] 님이 게임에서 퇴장하셨습니다.")
 
 
-# 실제 게임 진행 (현재까지 사용한 문법(Ex. for문)을 사용해서 리팩토링은 내일 천천히 진행해보기.)
+
+## 실제 게임 진행 (현재까지 사용한 문법(Ex. for문)을 사용해서 리팩토링은 내일 천천히 진행해보기.)
 game_start()
 
-'''
-# 마린 3기 생성
-m1 = Marine()
-m2 = Marine()
-m3 = Marine()
-
-# 탱크 2기 생성
-t1 = Tank()
-t2 = Tank()
-
-# 레이스 1기 생성
-w1 = Wraith()
-
-print()
-
-# 유닛 일괄 관리
-attack_units = []
-attack_units.append(m1)
-attack_units.append(m2)
-attack_units.append(m3)
-attack_units.append(t1)
-attack_units.append(t2)
-attack_units.append(w1)
-'''
-
+game_manager = UnitManager()
+# 생성 명령
 unit_plan = [ ("Marine", 3), ("Tank", 2), ("Wraith", 1)]
-
-attack_units = []
 
 for unit_type, count in unit_plan:
     for _ in range(count):
-        if unit_type == "Marine":
-            attack_units.append(Marine())
-        elif unit_type == "Tank":
-            attack_units.append(Tank())
-        if unit_type == "Wraith":
-            attack_units.append(Wraith())
+        game_manager.makeUnit(unit_type)
+
+print()
 
 
-# 전군 이동
-for unit in attack_units:
+# 이동 명령
+for unit in game_manager.units:
+    print("[{0}] 이동 명령 : ".format(unit.name), end=" ")
     unit.move("1시")
 
 print()
@@ -169,7 +174,7 @@ print()
 
 
 # 공격 모드 준비 ( 마린 : 스팀팩, 탱크 : 시즈모드, 레이스 : 클로킹)
-for unit in attack_units:
+for unit in game_manager.units:
     if isinstance(unit, Marine):        # MArine class의 인스턴스인가
         unit.stimpack()
     elif isinstance(unit, Tank):
@@ -179,14 +184,16 @@ for unit in attack_units:
     
 print()
 
-# 전군 공격
-for unit in attack_units:
+# 공격 명령
+for unit in game_manager.units:
+    print("[{0}] 공격 명령 : ".format(unit.name), end=" ")
     unit.attack("1시")
 
 print()
 
-# 전국 피해
-for unit in attack_units:
+# 전군 피해
+for unit in game_manager.units:
+    print("[{0}]".format(unit.name), end=" ")
     unit.damaged(randint(5,20))     # 공격은 랜덤으로 받음
 
 print()
