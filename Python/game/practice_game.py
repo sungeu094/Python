@@ -7,17 +7,17 @@ class Unit :
         self.hp = hp
         self.speed =speed
         self.damage = damage
-        print("{0} 유닛이 생성 되었습니다.".format(self.name))
+        print("[{0}] 유닛이 생성 되었습니다.".format(self.name))
         
     def move(self, location):
-        print("{0} 방향으로 이동합니다. [속도 {1}]".format(location, self.speed))
+        self.location = location
+        print("[{0}] 방향으로 이동합니다. [속도 {1}]".format(self.location, self.speed))
 
     def damaged(self, damage):
         print("{0} 데미지를 입었습니다.".format(damage), end=" ")
         self.hp -= damage
-        print("현재 체력 : {0}".format(self.hp))
-        if self.hp <= 0:
-            print("{0} : 파괴되었습니다.".format(self.name))
+        if self.hp > 0:
+            print("현재 체력 : {0}".format(self.hp))
 
 # 공중 기능을 가진 유닛
 class FlyableUnit:
@@ -60,9 +60,9 @@ class Marine(AttackUnit):
     def stimpack(self):
         if self.hp > 10:
             self.hp -= 10
-            print("{0} : 스팀팩을 사용합니다. (체력 10 감소)".format(self.name))
+            print("[{0}] 스팀팩을 사용합니다. 현재 체력 : {1}".format(self.name, self.hp))
         else:
-            print("{0} : 체력이 부족하여 스팀팩을 사용하지 않습니다.".format(self.name))
+            print("[{0}] 체력이 부족하여 스팀팩을 사용하지 않습니다. 현재 체력 : {1}".format(self.name, self.hp))
 
 
 ## 방어 유닛 - 탱크
@@ -80,11 +80,11 @@ class Tank(AttackUnit):
 
     def set_seize_mode(self) :
         if Tank.seize_developed == False:
-            print("{0} : 현재 시즈모드 개발이 되지 않았습니다.".format(self.name))
+            print("[{0}] 현재 시즈모드 개발이 되지 않았습니다.".format(self.name))
             return
         
         if self.seize_mode == False:
-            print("{0} : 시즈모드로 전환합니다.".format(self.name))
+            print("[{0} 시즈모드로 전환합니다.".format(self.name))
             self.damage *= 2
             self.seize_mode = True
         else:
@@ -128,14 +128,19 @@ class UnitManager:
         
         self.units.append(unit)
 
-    def deleteUnit(self, unit):   # 유닛 삭제
+    def deleteUnit(self, unit, unit_hp):   # 유닛 삭제
         if unit_hp <= 0:
             self.units.remove(unit)
+            print("해당 유닛이 삭제되었습니다.")
 
-    def searchUnit():   # 유닛 상태검색(이름, 생존 여부, 위치, 피상태 ...)
-        pass
-
-
+    def searchUnit(self, unit_name):   # 유닛 상태검색(이름, 위치, 피상태 ...)
+        found = False
+        for unit in self.units:
+            if unit.name == unit_name:
+                print("{0} (현재 위치 : {1}, 체력 : {2}, 스피드 : {3}, 공격력 : {4}))".format(unit.name, unit.location,  unit.hp, unit.speed, unit.damage))
+                found = True
+        if not found:
+            print("{0} 유닛을 찾을 수 없습니다.".format(unit_name))
 
 
 def game_start():
@@ -150,6 +155,7 @@ def game_over():
 ## 실제 게임 진행 (현재까지 사용한 문법(Ex. for문)을 사용해서 리팩토링은 내일 천천히 진행해보기.)
 game_start()
 
+print("="*30)
 game_manager = UnitManager()
 # 생성 명령
 unit_plan = [ ("Marine", 3), ("Tank", 2), ("Wraith", 1)]
@@ -158,14 +164,17 @@ for unit_type, count in unit_plan:
     for _ in range(count):
         game_manager.makeUnit(unit_type)
 
+print("="*30)
 print()
 
-
-# 이동 명령
+print("="*30)
+#전군 이동
 for unit in game_manager.units:
     print("[{0}] 이동 명령 : ".format(unit.name), end=" ")
     unit.move("1시")
 
+
+print("="*30)
 print()
 
 # 탱크 시즈모드 개발
@@ -173,30 +182,41 @@ print()
 #print("[알림] 탱크 시즈 모드 개발이 완료되었습니다.")
 
 
+print("="*30)
 # 공격 모드 준비 ( 마린 : 스팀팩, 탱크 : 시즈모드, 레이스 : 클로킹)
-for unit in game_manager.units:
+for unit in game_manager.units:     
     if isinstance(unit, Marine):        # MArine class의 인스턴스인가
         unit.stimpack()
     elif isinstance(unit, Tank):
         unit.set_seize_mode()
     elif isinstance(unit, Wraith):
         unit.clocking()
-    
+
+print("="*30)    
 print()
 
+
+print("="*30)
 # 공격 명령
 for unit in game_manager.units:
     print("[{0}] 공격 명령 : ".format(unit.name), end=" ")
     unit.attack("1시")
 
+print("="*30)
 print()
 
+
+print("="*30)
 # 전군 피해
-for unit in game_manager.units:
+for unit in game_manager.units[:]:   # 리스트 자체를 순환하는 것이 아닌 복사본 순회
     print("[{0}]".format(unit.name), end=" ")
-    unit.damaged(randint(5,20))     # 공격은 랜덤으로 받음
+    unit.damaged(randint(5,50))     # 공격은 랜덤으로 받음
+    game_manager.deleteUnit(unit, unit.hp)
 
+print("="*30)
 print()
 
+game_manager.searchUnit("마린1")
 # 게임 종료
 game_over()
+
