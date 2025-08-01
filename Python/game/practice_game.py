@@ -1,6 +1,18 @@
 # 유닛들의 기본
 from random import *
 
+# annotation을 자체 제작(데코레이터 -> 함수를 감싸서 실행 전후에 추가 동작을 넣을 수 있도록 하는 파이썬 기능)
+def with_bar(func):
+    def wrapper(*args, **kwargs):   # *args : 여러 개의 위치 인자를 받을 때 사용한다.(튜플 형태) **kwargs : 여러 개의 키워드 인자를 받을 때 사용한다.(딕셔너리 형태)
+        print("="*100)
+        result = func(*args, **kwargs)
+        print("="*100)
+        print()
+        return result
+    return wrapper
+    
+
+# 유닛들의 기본 성질
 class Unit :
     def __init__(self, name, hp, speed, damage):
         self.name = name
@@ -11,7 +23,7 @@ class Unit :
         
     def move(self, location):
         self.location = location
-        print("[{0}] 방향으로 이동합니다. [속도 {1}]".format(self.location, self.speed))
+        print("{0} 방향으로 이동합니다. [속도 {1}]".format(self.location, self.speed))
 
     def damaged(self, damage):
         print("{0} 데미지를 입었습니다.".format(damage), end=" ")
@@ -131,7 +143,7 @@ class UnitManager:
     def deleteUnit(self, unit, unit_hp):   # 유닛 삭제
         if unit_hp <= 0:
             self.units.remove(unit)
-            print("해당 유닛이 삭제되었습니다.")
+            print("해당 유닛이 파괴되었습니다.")
 
     def searchUnit(self, unit_name):   # 유닛 상태검색(이름, 위치, 피상태 ...)
         found = False
@@ -143,80 +155,89 @@ class UnitManager:
             print("{0} 유닛을 찾을 수 없습니다.".format(unit_name))
 
 
-def game_start():
-    print("[알림] 새로운 게임을 시작합니다.")
+class GameProcess:
+    game_manager = UnitManager()
 
-def game_over():
-    print("Player : gg")
-    print("[Player] 님이 게임에서 퇴장하셨습니다.")
+    @staticmethod
+    def game_start():
+        print("[알림] 새로운 게임을 시작합니다.")
+        print()
+
+    @with_bar
+    def process_makeUnit(self):
+        unit_plan = [ ("Marine", 3), ("Tank", 2), ("Wraith", 1)]
+
+        for unit_type, count in unit_plan:
+            for _ in range(count):
+                GameProcess.game_manager.makeUnit(unit_type)
+
+    @with_bar
+    def process_moveUnit(self):
+        for unit in GameProcess.game_manager.units:
+            print("[{0}] 이동 명령 : ".format(unit.name), end=" ")
+            unit.move("1시")
+
+    @with_bar
+    def process_prepareAttackUnit(self):
+        for unit in GameProcess.game_manager.units:     
+            if isinstance(unit, Marine):        # Marine class의 인스턴스인가?
+                unit.stimpack()
+            elif isinstance(unit, Tank):
+                unit.set_seize_mode()
+            elif isinstance(unit, Wraith):
+                unit.clocking()
+    
+    @with_bar
+    def process_attack(self, location):
+        for unit in GameProcess.game_manager.units:
+            print("[{0}] 공격 명령 : ".format(unit.name), end=" ")
+            unit.attack(location)
+
+    @with_bar
+    def process_damaged(self):
+        for unit in GameProcess.game_manager.units[:]:   # 리스트 자체를 순환하는 것이 아닌 복사본 순회
+            print("[{0}]".format(unit.name), end=" ")
+            unit.damaged(randint(5,50))     # 공격은 랜덤으로 받음
+            GameProcess.game_manager.deleteUnit(unit, unit.hp)
+
+    @with_bar
+    def process_searchUnit(self, name):
+        GameProcess.game_manager.searchUnit(name)
+
+    @staticmethod
+    def game_over():
+        print("Player : gg")
+        print("[Player] 님이 게임에서 퇴장하셨습니다.")
 
 
 
 ## 실제 게임 진행 (현재까지 사용한 문법(Ex. for문)을 사용해서 리팩토링은 내일 천천히 진행해보기.)
-game_start()
+gameProcess = GameProcess()
 
-print("="*30)
-game_manager = UnitManager()
+GameProcess.game_start()
+
 # 생성 명령
-unit_plan = [ ("Marine", 3), ("Tank", 2), ("Wraith", 1)]
+gameProcess.process_makeUnit()
 
-for unit_type, count in unit_plan:
-    for _ in range(count):
-        game_manager.makeUnit(unit_type)
-
-print("="*30)
-print()
-
-print("="*30)
 #전군 이동
-for unit in game_manager.units:
-    print("[{0}] 이동 명령 : ".format(unit.name), end=" ")
-    unit.move("1시")
-
-
-print("="*30)
-print()
+gameProcess.process_moveUnit()
 
 # 탱크 시즈모드 개발
 #Tank.seize_developed = True
 #print("[알림] 탱크 시즈 모드 개발이 완료되었습니다.")
 
-
-print("="*30)
 # 공격 모드 준비 ( 마린 : 스팀팩, 탱크 : 시즈모드, 레이스 : 클로킹)
-for unit in game_manager.units:     
-    if isinstance(unit, Marine):        # MArine class의 인스턴스인가
-        unit.stimpack()
-    elif isinstance(unit, Tank):
-        unit.set_seize_mode()
-    elif isinstance(unit, Wraith):
-        unit.clocking()
+gameProcess.process_prepareAttackUnit()
 
-print("="*30)    
-print()
-
-
-print("="*30)
 # 공격 명령
-for unit in game_manager.units:
-    print("[{0}] 공격 명령 : ".format(unit.name), end=" ")
-    unit.attack("1시")
+gameProcess.process_attack("1시")
 
-print("="*30)
-print()
-
-
-print("="*30)
 # 전군 피해
-for unit in game_manager.units[:]:   # 리스트 자체를 순환하는 것이 아닌 복사본 순회
-    print("[{0}]".format(unit.name), end=" ")
-    unit.damaged(randint(5,50))     # 공격은 랜덤으로 받음
-    game_manager.deleteUnit(unit, unit.hp)
+gameProcess.process_damaged()
 
-print("="*30)
-print()
+# 유닛 현재 상황 파악
+gameProcess.process_searchUnit("마린1")
 
-game_manager.searchUnit("마린1")
 # 게임 종료
-game_over()
+GameProcess.game_over()
 
