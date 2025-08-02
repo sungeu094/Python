@@ -1,0 +1,1 @@
+__all__ = ["vietnam", "thailand"]       # 현재 패키지 속 vietnam, thailand 모듈을 사용하겠다는 의미
