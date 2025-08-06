@@ -1,0 +1,14 @@
+1. background 설정 관련 메서드 blits
+
+(method) def blits(
+    blit_sequence: 
+        Sequence[
+            Tuple[Surface, Coordinate | RectValue] | 
+            Tuple[Surface, Coordinate | RectValue, RectValue | int] | 
+            Tuple[Surface, Coordinate | RectValue, RectValue, int]
+        ],
+    doreturn: 
+        int | bool = 1
+) -> (List[Rect] | None)
+
+# blit_sequence의 타입 힌트는 Sequence[]이다. 이때, Sequence는 리스트이기 때문에 [] 사용. 그 안쪽 Sequence 내부에는 Tuple이 여러개 들어갈 수 있음. 이때, Tuple[]이지만 (tuple)로 해석이 됨. 반환값은 None이거나 List[Rect]
