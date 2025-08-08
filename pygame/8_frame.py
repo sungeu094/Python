@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import pygame
 
 # ====================== 기본 초기화 ===========================
+
 ## 상수 namespace로 나열
 GameConfig = SimpleNamespace(
     SCREEN_WIDTH = 480,
@@ -18,12 +19,11 @@ def init_pygame():
     pygame.display.set_caption(GameConfig.TITLE)
     clock = pygame.time.Clock()
     start_ticks = pygame.time.get_ticks()
-    return screen, clock, start_ticks
+    timer_font = pygame.font.Font(None, 40)
+    coord_font = pygame.font.Font(None,15)
+    return screen, clock, start_ticks, timer_font, coord_font
 
-screen, clock, start_ticks = init_pygame()
-
-## 폰트 정의
-game_font = pygame.font.Font(None, 40)  # 폰트 객체 생성(폰트, 크기)
+screen, clock, start_ticks, timer_font, coord_font = init_pygame()
 # ===============================================================
 
 # ===================== 사용자 게임 초기화 ======================
@@ -47,17 +47,18 @@ class GameCharacter :
             if y_pos <= GameConfig.SCREEN_HEIGHT - self.character_height 
             else GameConfig.SCREEN_HEIGHT - self.character_height 
         )
-        ## 이동할 좌표
+        
+        ## 이동 좌표
         self.to_x = 0
         self.to_y = 0
         
         ## 이동 속도
-        self.character_speed = 0.6
+        self.character_speed = 0.6  # 변수로 주는 것도 가능.
         
     def moving(self, to_x, to_y):
         self.to_x += to_x
         self.to_y += to_y
-        print(self.to_x, self.to_y, sep = "  ")
+        print(self.to_x, self.to_y, sep = "::")
         
     def check_position(self):
         self.x = (
@@ -84,10 +85,19 @@ class GameCharacter :
         text_surface = font.render(coord_text, True, (255,255,255))
         screen.blit(text_surface, (self.x, self.y))
 
+class GameTimer:
+    def __init__(self, total_time):
+        self.total_time = total_time
+
+    def draw(self, start_ticks):
+        elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000
+        remainTime = GameConfig.TOTAL_TIME - elapsed_time
+        timer = timer_font.render(str(int(GameConfig.TOTAL_TIME - elapsed_time)), True, (255,255,255))
+        screen.blit(timer, (10,10))
+        return int(remainTime) 
+    
 myCharacter = GameCharacter("C:/Users/sunge/OneDrive/Desktop/PythonWorkspace/pygame/character.png", 100,100)
 enemy = GameCharacter("C:/Users/sunge/OneDrive/Desktop/PythonWorkspace/pygame/enemy.png", 300, 300)
-    
-
 
 ## 이벤트 루프
 running = True  # 게임이 진행중인가?
@@ -119,8 +129,7 @@ while running :
     myCharacter.x += myCharacter.to_x * dt
     myCharacter.y += myCharacter.to_y * dt
     myCharacter.check_position()
-    
-    print(myCharacter.x, myCharacter.y)
+    # print(myCharacter.x, myCharacter.y)
 
     ## 충돌 처리 & 체크 (ok)
     myRect = myCharacter.collision()
@@ -139,19 +148,16 @@ while running :
     screen.blit(enemy.character, (enemy.x, enemy.y))
     
     ## 내 캐릭터의 좌표 (ok)
-    myCharacter.draw_coord_text(screen, pygame.font.Font(None, 15))
+    myCharacter.draw_coord_text(screen, coord_font)
     
     ## 타이머 - 경과 시간 계산 (ok)
-    elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000   
-    timer = game_font.render(str(int(GameConfig.TOTAL_TIME - elapsed_time)), True, (255,255,255))
-    screen.blit(timer, (10,10))
+    timer = GameTimer(GameConfig.TOTAL_TIME)
     
-    if GameConfig.TOTAL_TIME - elapsed_time <= 0:
+    if timer.draw(start_ticks) <= 0:
         print("타임 아웃")
         running = False
     
-    
-    pygame.display.update()     
+    pygame.display.update()    
     # flip() vs update() : 인자가 없을 때는 동일하게 전체 화면 갱신이지만 update는 인자를 넣어줄 수 있다.
 
 ## 잠시 대기
