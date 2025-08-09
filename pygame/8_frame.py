@@ -58,9 +58,12 @@ class GameCharacter :
     def moving(self, to_x, to_y):
         self.to_x += to_x
         self.to_y += to_y
-        print(self.to_x, self.to_y, sep = "::")
         
-    def check_position(self):
+    def check_position(self):   
+        '''
+        Wrong ) 왜 모든 부분에 대해서 어떤 부분은 main코드에 직접적으로 코드로 만들고 어떤 부분은 method로 만드는가? 나는 지금 그 경계에 대한 확실함이 부족하다. 
+        Ex. 왜 self.x = self.to_x * dt (y도 동일) --> 여기 해당하는 메서드는 만들지 않았는지 한번 더 생각하기.
+        '''
         self.x = (
             max(0, self.x)
             if self.x <= GameConfig.SCREEN_WIDTH - self.character_width
